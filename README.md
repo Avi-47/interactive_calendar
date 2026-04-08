@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Wall Calendar Mood Planner
 
-## Getting Started
+An interactive wall-calendar inspired component built with Next.js (App Router) and React, featuring weather-driven mood themes.
 
-First, run the development server:
+## What This Includes
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Physical wall-calendar aesthetic with hanging rings and artwork panel.
+- Monthly calendar grid with clear start date, end date, and in-range visual states.
+- Dynamic weather to mood theming:
+  - Today uses live weather conditions.
+  - Future dates use forecasted weather cache.
+  - Past dates use cached weather data, with deterministic mock fallback.
+  - Time of day (morning/afternoon/evening/night) influences mood resolution.
+- Integrated notes panel:
+  - Month memo (keyed by month).
+  - Day memo (keyed by date).
+  - Selected range memo (keyed by selected start and end).
+- Dynamic hero and wall styling based on resolved mood theme.
+- Subtle weather effects (rain, sun glow, cloud drift, snow).
+- Responsive behavior:
+  - Desktop: three-panel layout (hero, calendar, notes).
+  - Tablet: hero across top, calendar and notes side by side.
+  - Mobile: fully stacked layout with touch-friendly cells.
+- localStorage persistence for all notes.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Architecture
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Calendar logic hook: src/hooks/useCalendar.ts
+- Weather logic hook: src/hooks/useWeather.ts
+- Theme mapping: src/lib/weatherTheme.ts
+- Date utilities: src/lib/date.ts
+- UI components:
+  - src/components/HeroImage.tsx
+  - src/components/CalendarGrid.tsx
+  - src/components/CalendarDay.tsx
+  - src/components/NotesPanel.tsx
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Tech Stack
 
-## Learn More
+- Next.js 16
+- React 19
+- TypeScript
+- Tailwind v4 (base setup) + custom CSS for the visual design
 
-To learn more about Next.js, take a look at the following resources:
+## Run Locally
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Install dependencies:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+	npm install
 
-## Deploy on Vercel
+2. Start development server:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+	npm run dev
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+3. Open:
+
+	http://localhost:3000
+
+## Available Scripts
+
+- npm run dev: start local dev server
+- npm run lint: run ESLint
+- npm run build: production build
+- npm run start: run production server
+
+## UX Notes
+
+- Clicking a day when no range exists sets the start day.
+- Clicking a second day sets the end day.
+- Clicking again after a completed range starts a new range.
+- If the second click is earlier than the start, dates are auto-swapped.
+- Day note editor is enabled when a day has been selected.
+- Range note editor is enabled when both start and end are selected.
+- Month/day/range notes persist via localStorage.
+
+## Submission Checklist
+
+Replace these placeholders before submitting:
+
+- Repository URL: ADD_YOUR_GITHUB_OR_GITLAB_LINK
+- Demo Video URL (Required): ADD_LOOM_OR_YOUTUBE_LINK
+- Live Demo URL (Optional): ADD_VERCEL_OR_NETLIFY_LINK
+
+## Suggested Demo Flow
+
+1. Show desktop layout and month navigation.
+2. Select a start and end date.
+3. Enter and reload notes to prove localStorage persistence.
+4. Resize to mobile and demonstrate touch-friendly interactions.
