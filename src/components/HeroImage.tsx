@@ -3,7 +3,9 @@ type HeroImageProps = {
   mood: string;
   condition: string;
   temperatureC: number;
+  showSummary: boolean;
   showTemperature: boolean;
+  showTime: boolean;
   timeOfDay: string;
   image: string;
   error: string | null;
@@ -15,7 +17,9 @@ export function HeroImage({
   mood,
   condition,
   temperatureC,
+  showSummary,
   showTemperature,
+  showTime,
   timeOfDay,
   image,
   error,
@@ -48,15 +52,17 @@ export function HeroImage({
       <div className="hero-copy">
         <p className="hero-kicker">Weather Mood Planner</p>
         <h1>{monthLabel}</h1>
-        <p>
-          Mood: <strong>{mood}</strong> | Condition: <strong>{condition}</strong>
-          {showTemperature ? (
-            <>
-              {" "}| Temp:<strong> {Math.round(temperatureC)} C</strong>
-            </>
-          ) : null}
-        </p>
-        <p>Time: {timeOfDay}</p>
+        {showSummary ? (
+          <p>
+            Mood: <strong>{mood}</strong> | Condition: <strong>{condition}</strong>
+            {showTemperature ? (
+              <>
+                {" "}| Temp:<strong> {Math.round(temperatureC)} C</strong>
+              </>
+            ) : null}
+          </p>
+        ) : null}
+        {showTime ? <p>Time: {timeOfDay}</p> : null}
         {error ? <p className="hero-status">{error}</p> : null}
       </div>
     </aside>

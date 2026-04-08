@@ -15,23 +15,40 @@ type WeatherSnapshot = {
   sunsetISO?: string;
 };
 
-type WeatherApiPayload = {
-  current: {
-    weather_code: number;
-    temperature_2m: number;
-    is_day: 0 | 1;
-  };
-  daily: {
-    time: string[];
-    weather_code: number[];
-    temperature_2m_max: number[];
-    temperature_2m_min: number[];
-    sunrise: string[];
-    sunset: string[];
-  };
-};
+type WeatherApiPayload =
+  | {
+      mode: "forecast";
+      current: {
+        weather_code: number;
+        temperature_2m: number;
+        is_day: 0 | 1;
+      };
+      daily: {
+        time: string[];
+        weather_code: number[];
+        temperature_2m_max: number[];
+        temperature_2m_min: number[];
+        sunrise: string[];
+        sunset: string[];
+      };
+    }
+  | {
+      mode: "history";
+      day: {
+        time: string;
+        weather_code: number;
+        temperature_2m_mean: number;
+        sunrise: string;
+        sunset: string;
+      };
+    };
 
 type CachedWeather = Record<string, WeatherSnapshot>;
+
+type WeatherCacheMeta = {
+  lat: number;
+  lon: number;
+};
 
 type WeatherHookResult = {
   condition: WeatherCondition;
@@ -51,6 +68,7 @@ const WEATHER_REFRESH_MS = 10 * 60 * 1000;
 let inFlightWeatherFetch: Promise<CachedWeather> | null = null;
 let lastSuccessfulFetchAt = 0;
 let rateLimitedUntil = 0;
+const WEATHER_CACHE_META_KEY = "weatherCacheMeta";
 
 function getCoords(): Promise<{ lat: number; lon: number }> {
   if (typeof navigator === "undefined" || !navigator.geolocation) {
@@ -92,25 +110,77 @@ function writeCache(cache: CachedWeather) {
   localStorage.setItem("weatherCacheByDay", JSON.stringify(cache));
 }
 
+function clearCache() {
+  if (typeof window === "undefined") {
+    return;
+  }
+  localStorage.removeItem("weatherCacheByDay");
+  localStorage.removeItem(WEATHER_CACHE_META_KEY);
+}
+
+function readCacheMeta(): WeatherCacheMeta | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const raw = localStorage.getItem(WEATHER_CACHE_META_KEY);
+    if (!raw) {
+      return null;
+    }
+    const parsed = JSON.parse(raw) as Partial<WeatherCacheMeta>;
+    if (
+      typeof parsed?.lat === "number" &&
+      Number.isFinite(parsed.lat) &&
+      typeof parsed?.lon === "number" &&
+      Number.isFinite(parsed.lon)
+    ) {
+      return { lat: parsed.lat, lon: parsed.lon };
+    }
+  } catch {
+    // Ignore malformed cache metadata.
+  }
+
+  return null;
+}
+
+function writeCacheMeta(meta: WeatherCacheMeta) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  localStorage.setItem(WEATHER_CACHE_META_KEY, JSON.stringify(meta));
+}
+
 function mergeWeatherIntoCache(date: Date, payload: WeatherApiPayload): CachedWeather {
   const nextCache = { ...readCache() };
-  const todayKey = dateToKey(normalizeDate(new Date()));
 
-  nextCache[todayKey] = {
-    code: payload.current.weather_code,
-    tempC: payload.current.temperature_2m,
-  };
-
-  payload.daily.time.forEach((dayKey, index) => {
-    const tempAvg =
-      (payload.daily.temperature_2m_max[index] + payload.daily.temperature_2m_min[index]) / 2;
-    nextCache[dayKey] = {
-      code: payload.daily.weather_code[index],
-      tempC: tempAvg,
-      sunriseISO: payload.daily.sunrise[index],
-      sunsetISO: payload.daily.sunset[index],
+  if (payload.mode === "history") {
+    nextCache[payload.day.time] = {
+      code: payload.day.weather_code,
+      tempC: payload.day.temperature_2m_mean,
+      sunriseISO: payload.day.sunrise,
+      sunsetISO: payload.day.sunset,
     };
-  });
+  } else {
+    const todayKey = dateToKey(normalizeDate(new Date()));
+
+    nextCache[todayKey] = {
+      code: payload.current.weather_code,
+      tempC: payload.current.temperature_2m,
+    };
+
+    payload.daily.time.forEach((dayKey, index) => {
+      const tempAvg =
+        (payload.daily.temperature_2m_max[index] + payload.daily.temperature_2m_min[index]) / 2;
+      nextCache[dayKey] = {
+        code: payload.daily.weather_code[index],
+        tempC: tempAvg,
+        sunriseISO: payload.daily.sunrise[index],
+        sunsetISO: payload.daily.sunset[index],
+      };
+    });
+  }
 
   writeCache(nextCache);
   return nextCache;
@@ -170,7 +240,10 @@ function getTimeOfDayFromSun(
 }
 
 async function fetchWeatherFromApi(lat: number, lon: number, date: Date): Promise<CachedWeather> {
-  const response = await fetch(`/api/weather?lat=${lat}&lon=${lon}`, { cache: "no-store" });
+  const dateKey = dateToKey(date);
+  const response = await fetch(`/api/weather?lat=${lat}&lon=${lon}&date=${dateKey}`, {
+    cache: "no-store",
+  });
 
   if (!response.ok) {
     if (response.status === 429) {
@@ -196,7 +269,9 @@ async function fetchWeatherFromApi(lat: number, lon: number, date: Date): Promis
   }
 
   const payload = (await response.json()) as WeatherApiPayload;
-  return mergeWeatherIntoCache(date, payload);
+  const nextCache = mergeWeatherIntoCache(date, payload);
+  writeCacheMeta({ lat, lon });
+  return nextCache;
 }
 
 function buildMockWeather(date: Date): WeatherSnapshot {
@@ -242,24 +317,45 @@ export function useWeather(selectedDate: Date | null): WeatherHookResult {
   }, []);
 
   useEffect(() => {
+    const cacheMeta = readCacheMeta();
+    if (!cacheMeta) {
+      writeCacheMeta(coords);
+      return;
+    }
+
+    const latDelta = Math.abs(cacheMeta.lat - coords.lat);
+    const lonDelta = Math.abs(cacheMeta.lon - coords.lon);
+    if (latDelta > 0.3 || lonDelta > 0.3) {
+      clearCache();
+      lastSuccessfulFetchAt = 0;
+      rateLimitedUntil = 0;
+      setCache({});
+    }
+
+    writeCacheMeta(coords);
+  }, [coords]);
+
+  useEffect(() => {
     let cancelled = false;
 
     async function fetchWeather() {
+      const cacheSnapshot = readCache();
       const nowMs = Date.now();
       const dateKey = dateToKey(date);
-      const hasDateInCache = Boolean(cache[dateKey]);
+      const hasDateInCache = Boolean(cacheSnapshot[dateKey]);
       const shouldRefreshNow = !hasDateInCache || nowMs - lastSuccessfulFetchAt >= WEATHER_REFRESH_MS;
 
       if (rateLimitedUntil > nowMs && !hasDateInCache) {
         const secondsLeft = Math.max(1, Math.ceil((rateLimitedUntil - nowMs) / 1000));
         setError(`Weather API is rate-limited. Retrying in ${secondsLeft}s.`);
-        setSource(resolveSource(date, cache, false));
+        setSource(resolveSource(date, cacheSnapshot, false));
         return;
       }
 
       if (!shouldRefreshNow) {
         setError(null);
-        setSource(resolveSource(date, cache, false));
+        setCache(cacheSnapshot);
+        setSource(resolveSource(date, cacheSnapshot, false));
         return;
       }
 
@@ -306,23 +402,17 @@ export function useWeather(selectedDate: Date | null): WeatherHookResult {
     return () => {
       cancelled = true;
     };
-  }, [cache, coords.lat, coords.lon, date]);
+  }, [coords.lat, coords.lon, date]);
 
   const { condition, mood, theme, temperatureC, timeOfDay } = useMemo(() => {
     const today = normalizeDate(new Date());
     const dateKey = dateToKey(date);
     const cached = cache[dateKey] ?? buildMockWeather(date);
     const now = new Date();
+    const parsed = parseDateKey(dateKey);
     const selectedTime = sameDay(date, today)
       ? now
-      : new Date(
-          parseDateKey(dateKey).getFullYear(),
-          parseDateKey(dateKey).getMonth(),
-          parseDateKey(dateKey).getDate(),
-          12,
-          0,
-          0,
-        );
+      : new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate(), 12, 0, 0);
     const currentTimeOfDay = getTimeOfDayFromSun(selectedTime, cached);
 
     const isNight = currentTimeOfDay === "night";

@@ -187,6 +187,19 @@ export default function Home() {
   }, []);
 
   const weather = useWeather(activeDate ?? today);
+  const selectedWeatherDate = useMemo(
+    () => normalizeDate(activeDate ?? today),
+    [activeDate, today],
+  );
+  const weatherDayDiff = useMemo(
+    () =>
+      Math.floor(
+        (selectedWeatherDate.getTime() - today.getTime()) / 86400000,
+      ),
+    [selectedWeatherDate, today],
+  );
+  const isTodayWeather = weatherDayDiff === 0;
+  const hasRealWeatherData = weather.source !== "mock";
 
   const monthLabel = useMemo(
     () =>
@@ -427,7 +440,9 @@ export default function Home() {
           mood={weather.mood}
           condition={weather.condition}
           temperatureC={weather.temperatureC}
-          showTemperature={weather.source !== "mock"}
+          showSummary={hasRealWeatherData}
+          showTemperature={hasRealWeatherData}
+          showTime={isTodayWeather}
           timeOfDay={weather.timeOfDay}
           image={weather.theme.image}
           error={weather.error}
