@@ -71,8 +71,31 @@ let rateLimitedUntil = 0;
 const WEATHER_CACHE_META_KEY = "weatherCacheMeta";
 
 function getCoords(): Promise<{ lat: number; lon: number }> {
+  const fetchServerLocation = async () => {
+    try {
+      const response = await fetch("/api/location", { cache: "no-store" });
+      if (!response.ok) {
+        return { lat: DEFAULT_LAT, lon: DEFAULT_LON };
+      }
+
+      const payload = (await response.json()) as { lat?: number; lon?: number };
+      if (
+        typeof payload.lat === "number" &&
+        Number.isFinite(payload.lat) &&
+        typeof payload.lon === "number" &&
+        Number.isFinite(payload.lon)
+      ) {
+        return { lat: payload.lat, lon: payload.lon };
+      }
+    } catch {
+      // Fallback handled below.
+    }
+
+    return { lat: DEFAULT_LAT, lon: DEFAULT_LON };
+  };
+
   if (typeof navigator === "undefined" || !navigator.geolocation) {
-    return Promise.resolve({ lat: DEFAULT_LAT, lon: DEFAULT_LON });
+    return fetchServerLocation();
   }
 
   return new Promise((resolve) => {
@@ -83,7 +106,9 @@ function getCoords(): Promise<{ lat: number; lon: number }> {
           lon: position.coords.longitude,
         });
       },
-      () => resolve({ lat: DEFAULT_LAT, lon: DEFAULT_LON }),
+      async () => {
+        resolve(await fetchServerLocation());
+      },
       { timeout: 5000 },
     );
   });
