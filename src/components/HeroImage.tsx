@@ -51,9 +51,9 @@ export function HeroImage({
       </div>
       <div className="hero-copy">
         <p className="hero-kicker">Weather Mood Planner</p>
-        <h1>{monthLabel}</h1>
+        <h1 suppressHydrationWarning>{monthLabel}</h1>
         {showSummary ? (
-          <p>
+          <p suppressHydrationWarning>
             Mood: <strong>{mood}</strong> | Condition: <strong>{condition}</strong>
             {showTemperature ? (
               <>
@@ -62,8 +62,8 @@ export function HeroImage({
             ) : null}
           </p>
         ) : null}
-        {showTime ? <p>Time: {timeOfDay}</p> : null}
-        {error ? <p className="hero-status">{error}</p> : null}
+        {showTime ? <p suppressHydrationWarning>Time: {timeOfDay}</p> : null}
+        {error ? <p suppressHydrationWarning className="hero-status">{error}</p> : null}
       </div>
     </aside>
   );
