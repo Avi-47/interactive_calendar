@@ -48,7 +48,8 @@ An interactive wall-calendar inspired component built with Next.js (App Router) 
 
    ```bash
    npm install
-```
+    ```
+    
 
 2. Start development server:
 
@@ -107,5 +108,3 @@ To evaluate your work efficiently, please provide the following:
 ## Live Demo
 
 [https://interactivecalendar-kohl.vercel.app](https://interactivecalendar-kohl.vercel.app)
-
-```
