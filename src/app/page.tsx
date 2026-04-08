@@ -427,10 +427,10 @@ export default function Home() {
           mood={weather.mood}
           condition={weather.condition}
           temperatureC={weather.temperatureC}
+          showTemperature={weather.source !== "mock"}
           timeOfDay={weather.timeOfDay}
           image={weather.theme.image}
           error={weather.error}
-          source={weather.source}
           animation={weather.theme.animation}
         />
 
