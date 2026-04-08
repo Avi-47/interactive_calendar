@@ -25,15 +25,15 @@ An interactive wall-calendar inspired component built with Next.js (App Router) 
 
 ## Architecture
 
-- Calendar logic hook: src/hooks/useCalendar.ts
-- Weather logic hook: src/hooks/useWeather.ts
-- Theme mapping: src/lib/weatherTheme.ts
-- Date utilities: src/lib/date.ts
+- Calendar logic hook: `src/hooks/useCalendar.ts`
+- Weather logic hook: `src/hooks/useWeather.ts`
+- Theme mapping: `src/lib/weatherTheme.ts`
+- Date utilities: `src/lib/date.ts`
 - UI components:
-  - src/components/HeroImage.tsx
-  - src/components/CalendarGrid.tsx
-  - src/components/CalendarDay.tsx
-  - src/components/NotesPanel.tsx
+  - `src/components/HeroImage.tsx`
+  - `src/components/CalendarGrid.tsx`
+  - `src/components/CalendarDay.tsx`
+  - `src/components/NotesPanel.tsx`
 
 ## Tech Stack
 
@@ -46,40 +46,46 @@ An interactive wall-calendar inspired component built with Next.js (App Router) 
 
 1. Install dependencies:
 
-	npm install
+   ```bash
+   npm install
+```
 
 2. Start development server:
 
-	npm run dev
+   ```bash
+   npm run dev
+   ```
 
-3. Open:
+3. Open in browser:
 
-	http://localhost:3000
+   ```
+   http://localhost:3000
+   ```
 
 ## Available Scripts
 
-- npm run dev: start local dev server
-- npm run lint: run ESLint
-- npm run build: production build
-- npm run start: run production server
+* `npm run dev`: start local dev server
+* `npm run lint`: run ESLint
+* `npm run build`: production build
+* `npm run start`: run production server
 
 ## UX Notes
 
-- Clicking a day when no range exists sets the start day.
-- Clicking a second day sets the end day.
-- Clicking again after a completed range starts a new range.
-- If the second click is earlier than the start, dates are auto-swapped.
-- Day note editor is enabled when a day has been selected.
-- Range note editor is enabled when both start and end are selected.
-- Month/day/range notes persist via localStorage.
+* Clicking a day when no range exists sets the start day.
+* Clicking a second day sets the end day.
+* Clicking again after a completed range starts a new range.
+* If the second click is earlier than the start, dates are auto-swapped.
+* Day note editor is enabled when a day has been selected.
+* Range note editor is enabled when both start and end are selected.
+* Month/day/range notes persist via localStorage.
 
 ## Submission Checklist
 
 Replace these placeholders before submitting:
 
-- Repository URL: ADD_YOUR_GITHUB_OR_GITLAB_LINK
-- Demo Video URL (Required): ADD_LOOM_OR_YOUTUBE_LINK
-- Live Demo URL (Optional): ADD_VERCEL_OR_NETLIFY_LINK
+* Repository URL: ADD_YOUR_GITHUB_OR_GITLAB_LINK
+* Demo Video URL (Required): ADD_LOOM_OR_YOUTUBE_LINK
+* Live Demo URL (Optional): ADD_VERCEL_OR_NETLIFY_LINK
 
 ## Suggested Demo Flow
 
@@ -87,3 +93,19 @@ Replace these placeholders before submitting:
 2. Select a start and end date.
 3. Enter and reload notes to prove localStorage persistence.
 4. Resize to mobile and demonstrate touch-friendly interactions.
+
+---
+
+## 📦 Submission Guidelines
+
+To evaluate your work efficiently, please provide the following:
+
+* **Source Code:** A link to your public GitHub/GitLab repository containing the project. Include a brief README explaining your choices and how to run the project locally.
+* **Video Demonstration (Required):** Attach a short screen recording (or a link to a Loom/YouTube video) walking through the functioning component. Be sure to demonstrate the day range selection, the notes feature, and how the component responds to mobile and desktop screen sizes.
+* **Live Demo (Optional but Recommended):** A link to a deployed version of your component (Vercel, Netlify, GitHub Pages, etc.).
+
+## Live Demo
+
+[https://interactivecalendar-kohl.vercel.app](https://interactivecalendar-kohl.vercel.app)
+
+```
